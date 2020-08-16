@@ -29,7 +29,7 @@ def midi_to_samples(fname):
             if msg.type == 'note_on':
                 if msg.velocity == 0:
                     continue
-                note = mgs.note - (128 - num_notes)/2
+                note = msg.note - (128 - num_notes)/2
                 assert(note >= 0 and note < num_notes)
                 if note not in all_notes:
                     all_notes[note] = []
@@ -37,26 +37,29 @@ def midi_to_samples(fname):
                     single_note = all_notes[note][-1]
                     if len(single_note) == 1:
                         single_note.append(single_note[0] + 1)
-                all_notes[note].append(abs_time * samples_per_measure / ticks_per_measure)
+                all_notes[note].append([abs_time * samples_per_measure / ticks_per_measure])
+                
     for note in all_notes:
-		for start_end in all_notes[note]:
-			if len(start_end) == 1:
-				start_end.append(start_end[0] + 1)
+        for start_end in all_notes[note]:
+            if len(start_end) == 1:
+                start_end.append(start_end[0] + 1)
+
     samples = []
     for note in all_notes:
-		for start, end in all_notes[note]:
-			sample_ix = start / samples_per_measure
-			while len(samples) <= sample_ix:
-				samples.append(np.zeros((samples_per_measure, num_notes), dtype=np.uint8))
-			sample = samples[sample_ix]
-			start_ix = start - sample_ix * samples_per_measure
-			if False:
-				end_ix = min(end - sample_ix * samples_per_measure, samples_per_measure)
-				while start_ix < end_ix:
-					sample[start_ix, note] = 1
-					start_ix += 1
-			else:
-				sample[start_ix, note] = 1
+        for start, end in all_notes[note]:
+            sample_ix = int(start / samples_per_measure)
+            while len(samples) <= sample_ix:
+                samples.append(np.zeros((samples_per_measure, num_notes), dtype=np.uint8))
+            sample = samples[sample_ix]
+            start_ix = start - sample_ix * samples_per_measure
+            if False:
+                end_ix = min(end - sample_ix * samples_per_measure, samples_per_measure)
+                
+                while start_ix < end_ix:
+                    sample[int(start_ix), int(note)] = 1
+                    start_ix += 1
+            else:
+                sample[int(start_ix), int(note)] = 1
     return samples
 
 
@@ -64,25 +67,25 @@ def midi_to_samples(fname):
             
 
 def samples_to_midi(samples, fname, ticks_per_sample, thresh=0.5):
-	mid = MidiFile()
-	track = MidiTrack()
-	mid.tracks.append(track)
-	ticks_per_beat = mid.ticks_per_beat
-	ticks_per_measure = 4 * ticks_per_beat
-	ticks_per_sample = ticks_per_measure / samples_per_measure
-	abs_time = 0
-	last_time = 0
-	for sample in samples:
-		for y in xrange(sample.shape[0]):
-			abs_time += ticks_per_sample
-			for x in xrange(sample.shape[1]):
-				note = x + (128 - num_notes)/2
-				if sample[y,x] >= thresh and (y == 0 or sample[y-1,x] < thresh):
-					delta_time = abs_time - last_time
-					track.append(Message('note_on', note=note, velocity=127, time=delta_time))
-					last_time = abs_time
-				if sample[y,x] >= thresh and (y == sample.shape[0]-1 or sample[y+1,x] < thresh):
-					delta_time = abs_time - last_time
-					track.append(Message('note_off', note=note, velocity=127, time=delta_time))
-					last_time = abs_time
-	mid.save(fname)
+    mid = MidiFile()
+    track = MidiTrack()
+    mid.tracks.append(track)
+    ticks_per_beat = mid.ticks_per_beat
+    ticks_per_measure = 4 * ticks_per_beat
+    ticks_per_sample = ticks_per_measure / samples_per_measure
+    abs_time = 0
+    last_time = 0
+    for sample in samples:
+        for y in xrange(sample.shape[0]):
+            abs_time += ticks_per_sample
+            for x in xrange(sample.shape[1]):
+                note = x + (128 - num_notes)/2
+                if sample[y,x] >= thresh and (y == 0 or sample[y-1,x] < thresh):
+                    delta_time = abs_time - last_time
+                    track.append(Message('note_on', note=note, velocity=127, time=delta_time))
+                    last_time = abs_time
+                if sample[y,x] >= thresh and (y == sample.shape[0]-1 or sample[y+1,x] < thresh):
+                    delta_time = abs_time - last_time
+                    track.append(Message('note_off', note=note, velocity=127, time=delta_time))
+                    last_time = abs_time
+    mid.save(fname)

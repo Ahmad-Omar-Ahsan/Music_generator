@@ -14,10 +14,10 @@ def transpose_range(samples):
 def generate_add_centered_transpose(samples):
 	num_notes = samples[0].shape[1]
 	min_note, max_note = transpose_range(samples)
-	s = num_notes/2 - (max_note + min_note)/2
+	s = int(num_notes/2 - (max_note + min_note)/2)
 	out_samples = samples
 	out_lens = [len(samples), len(samples)]
-	for i in xrange(len(samples)):
+	for i in range(len(samples)):
 		out_sample = np.zeros_like(samples[i])
 		out_sample[:,min_note+s:max_note+s] = samples[i][:,min_note:max_note]
 		out_samples.append(out_sample)
@@ -30,8 +30,8 @@ def generate_all_transpose(samples, radius=6):
 	max_shift = min(radius, num_notes - max_note)
 	out_samples = []
 	out_lens = []
-	for s in xrange(min_shift, max_shift):
-		for i in xrange(len(samples)):
+	for s in range(min_shift, max_shift):
+		for i in range(len(samples)):
 			out_sample = np.zeros_like(samples[i])
 			out_sample[:,min_note+s:max_note+s] = samples[i][:,min_note:max_note]
 			out_samples.append(out_sample)
@@ -47,16 +47,16 @@ def sample_to_pic(fname, sample, thresh=None):
 
 def samples_to_pics(dir, samples, thresh=None):
 	if not os.path.exists(dir): os.makedirs(dir)
-	for i in xrange(samples.shape[0]):
+	for i in range(samples.shape[0]):
 		sample_to_pic(dir + '/s' + str(i) + '.png', samples[i], thresh)
 
 def pad_songs(y, y_lens, max_len):
 	y_shape = (y_lens.shape[0], max_len) + y.shape[1:]
 	y_train = np.zeros(y_shape, dtype=np.float32)
 	cur_ix = 0
-	for i in xrange(y_lens.shape[0]):
+	for i in range(y_lens.shape[0]):
 		end_ix = cur_ix + y_lens[i]
-		for j in xrange(max_len):
+		for j in range(max_len):
 			k = j % (end_ix - cur_ix)
 			y_train[i,j] = y[cur_ix + k]
 		cur_ix = end_ix
@@ -68,7 +68,7 @@ def sample_to_pattern(sample, ix, size):
 	pat_types = {}
 	pat_list = []
 	num_samples = len(sample) if type(sample) is list else sample.shape[0]
-	for i in xrange(size):
+	for i in range(size):
 		j = (ix + i) % num_samples
 		measure = sample[j].tobytes()
 		if measure not in pat_types:
@@ -82,8 +82,8 @@ def embed_samples(samples):
 	n, m, p = samples.shape
 	samples.flags.writeable = False
 	e_samples = np.empty(samples.shape[:2], dtype=np.int32)
-	for i in xrange(n):
-		for j in xrange(m):
+	for i in range(n):
+		for j in range(m):
 			note = samples[i,j].data
 			if note not in note_dict:
 				note_dict[note] = len(note_dict)
@@ -97,7 +97,7 @@ def embed_samples(samples):
 def e_to_samples(e_samples, lookup):
 	samples = np.empty(e_samples.shape + lookup.shape[-1:], dtype=np.float32)
 	n, m = e_samples.shape
-	for i in xrange(n):
-		for j in xrange(m):
+	for i in range(n):
+		for j in range(m):
 			samples[i,j] = lookup[e_samples[i,j]]
 	return samples
