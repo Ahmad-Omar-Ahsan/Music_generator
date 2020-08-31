@@ -26,3 +26,7 @@ readme
 *.kar
 *.C
 *.H
+*.png
+*.npy
+*.pyc
+*.h5
