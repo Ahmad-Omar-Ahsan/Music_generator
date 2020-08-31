@@ -9,14 +9,11 @@ import midi
 import os
 import math
 import tensorflow as tf
-from tensorflow.keras.layers import  Dense, Activation, Dropout, Flatten, Reshape, Permute, RepeatVector, ActivityRegularization, TimeDistributed, Lambda, SpatialDropout1D, Conv1D, Conv2D, Conv2DTranspose, UpSampling2D, ZeroPadding2D, Embedding,MaxPooling2D, AveragePooling2D,LocallyConnected2D, GaussianNoise, BatchNormalization, LSTM, SimpleRNN
+from tensorflow.keras.layers import  Dense, Activation, Dropout, Flatten, Reshape,   TimeDistributed, Lambda,   Embedding,  BatchNormalization
 from tensorflow.keras import Input
-from tensorflow.keras.initializers import RandomNormal
 from tensorflow.keras.losses import binary_crossentropy
 from tensorflow.keras.models import Model, Sequential, load_model
 from tensorflow.keras.optimizers import Adam, RMSprop, SGD
-from tensorflow.keras.preprocessing.image import ImageDataGenerator
-from tensorflow.keras.regularizers import l2
 from tensorflow.keras.utils import plot_model
 tf.compat.v1.disable_eager_execution()
 
@@ -34,7 +31,7 @@ BN_M = 0.9
 VAE_B1 = 0.02
 VAE_B2 = 0.1
 
-BATCH_SIZE = 350
+BATCH_SIZE = 128
 MAX_LENGTH = 16
 PARAM_SIZE = 120
 NUM_OFFSETS = 16 if USE_EMBEDDING else 1
@@ -160,6 +157,7 @@ y_shape = (num_songs * NUM_OFFSETS, MAX_LENGTH) + y_samples.shape[1:]
 x_orig = np.expand_dims(np.arange(x_shape[0]), axis=-1)
 y_orig = np.zeros(y_shape, dtype=y_samples.dtype)
 cur_ix = 0
+print("Padding done")
 
 for i in range(num_songs):
     for ofs in range(NUM_OFFSETS):
@@ -198,12 +196,17 @@ else:
         x_in = Input(shape=y_shape[1:])
         print((None, ) + x_shape[1:])
         x = Reshape((y_shape[1], -1))(x_in)
+        print(tf.keras.backend.int_shape(x))
 
 
         x = TimeDistributed(Dense(2000, activation='relu'))(x)
+        print(tf.keras.backend.int_shape(x))
         x = TimeDistributed(Dense(200, activation='relu'))(x)
+        print(tf.keras.backend.int_shape(x))
         x = Flatten()(x)
+        print(tf.keras.backend.int_shape(x))
         x = Dense(1600, activation='relu')(x)
+        print(tf.keras.backend.int_shape(x))
 
         if USE_VAE:
             z_mean = Dense(PARAM_SIZE)(x)
@@ -212,25 +215,34 @@ else:
         else:
             x = Dense(PARAM_SIZE)(x)
             x = BatchNormalization(momentum=BN_M, name='pre_encoder')(x)
+    print(tf.keras.backend.int_shape(x))
 
     x = Dense(1600, name='encoder')(x)
     x = BatchNormalization(momentum=BN_M)(x)
     x = Activation('relu')(x)
     if DO_RATE > 0:
         x = Dropout(DO_RATE)(x)
+    print(tf.keras.backend.int_shape(x))
+
     x = Dense(MAX_LENGTH * 200)(x)
+    print(tf.keras.backend.int_shape(x))
     x = Reshape((MAX_LENGTH, 200))(x)
     x = TimeDistributed(BatchNormalization(momentum=BN_M))(x)
     x = Activation('relu')(x)
     if DO_RATE > 0:
         x = Dropout(DO_RATE)(x)
-        x = TimeDistributed(Dense(2000))(x)
+    
+    print(tf.keras.backend.int_shape(x))
     x = TimeDistributed(BatchNormalization(momentum=BN_M))(x)
     x = Activation('relu')(x)
     if DO_RATE > 0:
         x = Dropout(DO_RATE)(x)
+    print(tf.keras.backend.int_shape(x))
+
     x = TimeDistributed(Dense(y_shape[2] * y_shape[3], activation='sigmoid'))(x)
+    print(tf.keras.backend.int_shape(x))
     x = Reshape((y_shape[1], y_shape[2], y_shape[3]))(x)
+    print(tf.keras.backend.int_shape(x))
 
     if USE_VAE:
         model = Model(x_in, x)
