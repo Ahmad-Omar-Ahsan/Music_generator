@@ -60,7 +60,7 @@ def plot_scores(scores, fname, on_top=True):
     plt.clf()
     ax = plt.gca()
     ax.yaxis.tick_right()
-    ax.yaxis.set_tick_position('both')
+    ax.yaxis.set_ticks_position('both')
     ax.yaxis.grid(True)
     plt.plot(scores)
     plt.ylim([0.0, 0.009])
@@ -142,7 +142,7 @@ if WRITE_HISTORY:
         os.makedirs('History')
 
 
-print('Loading data')
+print('Loading data...\n')
 y_samples = np.load('samples.npy')
 y_lengths = np.load('lengths.npy')
 num_samples = y_samples.shape[0]
@@ -151,13 +151,13 @@ print("Loaded {} samples from {} songs".format(num_samples, num_songs))
 print(np.sum(y_lengths))
 assert(np.sum(y_lengths) == num_samples)
 
-print("Padding songs")
+print("Padding songs.....\n")
 x_shape = (num_songs* NUM_OFFSETS, 1)
 y_shape = (num_songs * NUM_OFFSETS, MAX_LENGTH) + y_samples.shape[1:]
 x_orig = np.expand_dims(np.arange(x_shape[0]), axis=-1)
 y_orig = np.zeros(y_shape, dtype=y_samples.dtype)
 cur_ix = 0
-print("Padding done")
+print("Padding done\n")
 
 for i in range(num_songs):
     for ofs in range(NUM_OFFSETS):
@@ -180,11 +180,11 @@ x_test_song = np.copy(x_train[test_ix:test_ix+1])
 midi.samples_to_midi(y_test_song[0], 'gt.mid', 16)
 
 if CONTINUE_TRAIN or PLAY_ONLY:
-    print("Loading model")
+    print("Loading model.......\n")
     model = load_model('model.h5', custom_objects=custom_objects)
 
 else:
-    print("Building model")
+    print("Building model......\n")
     
     if USE_EMBEDDING:
         x_in = Input(shape=x_shape[1:])
@@ -246,15 +246,17 @@ else:
 
     if USE_VAE:
         model = Model(x_in, x)
-        model.compile(optimizer=Adam(lr=LR), loss=vae_loss, options = run_opts)
+        #model.compile(optimizer=Adam(lr=LR), loss=vae_loss, options = run_opts)
+        model.compile(optimizer=Adam(lr=LR), loss=vae_loss)
     else:
         model = Model(x_in, x)
-        model.compile(optimizer = RMSprop(lr = LR), loss='binary_crossentropy', options = run_opts )
+        #model.compile(optimizer = RMSprop(lr = LR), loss='binary_crossentropy', options = run_opts )
+        model.compile(optimizer = RMSprop(lr = LR), loss='binary_crossentropy')
     
     plot_model(model, to_file='model.png', show_shapes=True)
 
 
-print("Compiling submodels")
+print("Compiling submodels...... \n")
 func = tf.keras.backend.function([model.get_layer('encoder').input, tf.keras.backend.learning_phase()],
                 [model.layers[-1].output])
 
@@ -265,7 +267,7 @@ np.save('rand.npy', rand_vecs)
 
 
 if PLAY_ONLY:
-    print("Generating Songs...")
+    print("Generating Songs...\n")
     make_rand_songs_normalized('', rand_vecs)
     for i in range(20):
         x_test_song = x_train[i:i+1]
@@ -274,7 +276,7 @@ if PLAY_ONLY:
     exit(0)
 
 
-print("Training...")
+print("Training...\n")
 save_config()
 train_loss = []
 ofs = 0
@@ -315,7 +317,7 @@ for iter in range(NUM_EPOCHS):
             model.save("History/model.h5")
         else:
             model.save('model.h5')
-        print("saved")
+        print("saved\n")
         if USE_EMBEDDING:
             y_song = model.predict(x_test_song, batch_size=BATCH_SIZE)[0]
         else:
@@ -324,7 +326,7 @@ for iter in range(NUM_EPOCHS):
         midi.samples_to_midi(y_song, write_dir + 'test.mid', 16)
         make_rand_songs_normalized(write_dir, rand_vecs)
 
-print("Done")
+print("Done\n")
 
 
 
