@@ -135,6 +135,8 @@ def save_config():
         fout.write('num_songs:   ' + str(num_songs) + '\n')
         fout.write('optimizer:   ' + type(model.optimizer).__name__ + '\n')
 
+run_opts = tf.compat.v1.RunOptions(report_tensor_allocations_upon_oom = True)
+
 np.random.seed(0)
 random.seed(0)
 
@@ -232,10 +234,10 @@ else:
 
     if USE_VAE:
         model = Model(x_in, x)
-        model.compile(optimizer=Adam(lr=LR), loss=vae_loss)
+        model.compile(optimizer=Adam(lr=LR), loss=vae_loss, options = run_opts)
     else:
         model = Model(x_in, x)
-        model.compile(optimizer = RMSprop(lr = LR), loss='binary_crossentropy')
+        model.compile(optimizer = RMSprop(lr = LR), loss='binary_crossentropy', options = run_opts )
     
     plot_model(model, to_file='model.png', show_shapes=True)
 
