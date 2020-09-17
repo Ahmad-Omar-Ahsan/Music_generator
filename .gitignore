@@ -5,7 +5,7 @@
 *.alc
 *.zip
 *.PDF
-*.txt
+
 *.DS_Store
 *.iml
 *.midi
@@ -30,3 +30,4 @@ readme
 *.npy
 *.pyc
 *.h5
+**/130000_Pop_Rock_Classical_Videogame_EDM_MIDI_Archive[6_19_15]

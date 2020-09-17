@@ -201,10 +201,13 @@ else:
 
         x = TimeDistributed(Dense(2000, activation='relu'))(x)
         print(tf.keras.backend.int_shape(x))
+
         x = TimeDistributed(Dense(200, activation='relu'))(x)
         print(tf.keras.backend.int_shape(x))
+
         x = Flatten()(x)
         print(tf.keras.backend.int_shape(x))
+        
         x = Dense(1600, activation='relu')(x)
         print(tf.keras.backend.int_shape(x))
 
@@ -227,6 +230,7 @@ else:
     x = Dense(MAX_LENGTH * 200)(x)
     print(tf.keras.backend.int_shape(x))
     x = Reshape((MAX_LENGTH, 200))(x)
+    
     x = TimeDistributed(BatchNormalization(momentum=BN_M))(x)
     x = Activation('relu')(x)
     if DO_RATE > 0:
