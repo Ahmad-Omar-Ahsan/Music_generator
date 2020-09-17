@@ -1,0 +1,5 @@
+tensorflow==2.2
+PyAudio
+Wave
+mido
+opencv-python
